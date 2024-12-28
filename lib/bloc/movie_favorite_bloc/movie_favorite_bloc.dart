@@ -8,8 +8,9 @@ import 'movie_favorite_state.dart';
 class MovieCardFavoriteBloc
     extends Bloc<MovieCardFavoriteEvent, MovieCardFavoriteState> {
   final Box favoriteBox = Hive.box(HiveBoxNames.favoriteMovies.name);
+  final String movieId;
 
-  MovieCardFavoriteBloc() : super(MovieCardFavoriteInitial()) {
+  MovieCardFavoriteBloc({required this.movieId}) : super(MovieCardFavoriteInitial()) {
     on<CheckFavoriteStatus>(_onCheckFavoriteStatus);
     on<ToggleFavoriteStatus>(_onToggleFavoriteStatus);
   }
@@ -18,7 +19,7 @@ class MovieCardFavoriteBloc
       CheckFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
     try {
       emit(MovieCardFavoriteLoading());
-      final isFavorite = favoriteBox.containsKey(event.movieId);
+      final isFavorite = favoriteBox.containsKey(movieId);
       emit(MovieCardFavoriteStatus(isFavorite));
     } catch (e) {
       emit(MovieCardFavoriteError("Failed to check favorite status"));
@@ -29,13 +30,13 @@ class MovieCardFavoriteBloc
       ToggleFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
     try {
       emit(MovieCardFavoriteLoading());
-      final isFavorite = favoriteBox.containsKey(event.movie.id.toString());
+      final isFavorite = favoriteBox.containsKey(movieId);
 
       if (isFavorite) {
-        favoriteBox.delete(event.movie.id.toString());
+        favoriteBox.delete(movieId);
         emit(MovieCardFavoriteStatus(false));
       } else {
-        favoriteBox.put(event.movie.id.toString(), event.movie.toJson());
+        favoriteBox.put(movieId, event.movie.toJson());
         emit(MovieCardFavoriteStatus(true));
       }
     } catch (e) {

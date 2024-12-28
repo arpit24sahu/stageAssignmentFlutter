@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       body: BlocProvider(
-        create: (_) => _movieBloc,
+        create: (context) => _movieBloc,
         child: BlocBuilder<MovieBloc, MovieState>(
           builder: (context, state) {
             if (state is MovieLoading) {

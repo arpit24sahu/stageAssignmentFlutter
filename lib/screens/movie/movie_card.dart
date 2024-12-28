@@ -16,8 +16,8 @@ class MovieCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MovieCardFavoriteBloc()
-        ..add(CheckFavoriteStatus(movie.id.toString())),
+      create: (context) => MovieCardFavoriteBloc(movieId: movie.id??"")
+        ..add(CheckFavoriteStatus()),
       child: BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
         builder: (context, state) {
           final bloc = BlocProvider.of<MovieCardFavoriteBloc>(context);
@@ -33,9 +33,13 @@ class MovieCard extends StatelessWidget {
 
           return InkWell(
             onTap: () {
-              // Handle tap to navigate to details page or other functionality
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => MoviePage(movie: movie))
+                  MaterialPageRoute(
+                    builder: (newContext) => BlocProvider.value(
+                        value: BlocProvider.of<MovieCardFavoriteBloc>(context),
+                        child: MoviePage(movie: movie)
+                    ),
+                  )
               );
             },
             child: Card(
@@ -118,8 +122,6 @@ class MovieCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
-
                 ],
               ),
             ),

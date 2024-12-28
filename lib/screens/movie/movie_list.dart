@@ -20,7 +20,10 @@ class _MovieListState extends State<MovieList> {
       itemCount: widget.movies.length,
       itemBuilder: (BuildContext context, int index){
         Movie movie = widget.movies[index];
-        return MovieCard(movie: movie);
+        return MovieCard(
+          key: ValueKey(movie.id),
+            movie: movie
+        );
       },
     );
   }
