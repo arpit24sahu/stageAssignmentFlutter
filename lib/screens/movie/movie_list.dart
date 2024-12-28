@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:instabot/screens/movie_card.dart';
-import '../data/models/movie.dart';
+import 'package:instabot/screens/movie/movie_card.dart';
+import '../../data/models/movie.dart';
 
 class MovieList extends StatefulWidget {
   final List<Movie> movies;

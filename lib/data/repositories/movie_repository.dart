@@ -14,18 +14,4 @@ class  MovieRepository {
       throw Exception('Failed to fetch movies: $e');
     }
   }
-
-//   Future<List<Movie>> getFavoritesMovies(){
-//
-//   }
-//
-//
-// Future<void> toggleFavorite(Movie movie){
-//
-// }
-//
-//   bool isMovieFavorite(int id){
-//
-//   }
-
 }

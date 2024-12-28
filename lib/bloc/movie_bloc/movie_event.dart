@@ -5,3 +5,10 @@ class FetchMovies extends MovieEvent{
   int page;
   FetchMovies(this.onlyFavorites, this.page);
 }
+
+class FetchMoreMovies extends MovieEvent{
+  int page;
+  FetchMoreMovies(this.page);
+}
+
+

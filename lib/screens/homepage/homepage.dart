@@ -5,7 +5,7 @@ import '../../bloc/movie_bloc/movie_bloc.dart';
 import '../../bloc/movie_bloc/movie_event.dart';
 import '../../bloc/movie_bloc/movie_state.dart';
 import '../../data/models/movie.dart';
-import '../movie_list.dart';
+import '../movie/movie_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,9 +20,15 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchTermController = TextEditingController();
   final ValueNotifier<String> searchTermNotifier = ValueNotifier<String>('');
   bool onlyFavorites = false;
+  int currentPage = 1;
 
   void onFavToggleChange(bool value){
     _movieBloc.add(FetchMovies(value, 1));
+  }
+
+  void onLoadMoreMovies(){
+    currentPage++;
+    _movieBloc.add(FetchMoreMovies(currentPage));
   }
 
   @override
@@ -77,7 +83,27 @@ class _HomePageState extends State<HomePage> {
                   }).toList();
 
                   // Return the updated MovieList
-                  return MovieList(movies: filteredMovies);
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MovieList(movies: filteredMovies),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        if(searchTerm.isEmpty && state.movies.isNotEmpty && (!onlyFavorites))
+                          ElevatedButton(
+                            onPressed: (){
+                              // Todo
+                              // Implement last page functionality and fix visibility of this button
+                              onLoadMoreMovies();
+                            },
+                            child: Text("Load More Movies"),
+                          )
+
+                      ],
+                    ),
+                  );
                 },
               );
 
@@ -149,7 +175,7 @@ class _FavoritesToggleState extends State<FavoritesToggle> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text("Only Favorites "),
+        const Text("Only Favorites "),
         Switch(
           value: isFav,
           onChanged: (bool value){
