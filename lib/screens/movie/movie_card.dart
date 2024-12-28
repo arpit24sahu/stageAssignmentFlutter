@@ -17,6 +17,7 @@ class MovieCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      // Initialize the Bloc with the Movie ID and call Check Status to check the Favorite Status
       create: (context) => MovieCardFavoriteBloc(movieId: movie.id??"")
         ..add(CheckFavoriteStatus()),
       child: BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
@@ -34,6 +35,7 @@ class MovieCard extends StatelessWidget {
 
           return InkWell(
             onTap: () {
+              // When movie card is tapped, open the MoviePage which shows movie details
               Navigator.push(context,
                   MaterialPageRoute(
                     builder: (newContext) => BlocProvider.value(
@@ -117,6 +119,7 @@ class MovieCard extends StatelessWidget {
                             color: isFavorite ? Colors.red : null,
                           ),
                           onPressed: () {
+                            // Toggle Fav movie when icon is clicked
                             bloc.add(ToggleFavoriteStatus(movie));
                           },
                         ),

@@ -16,7 +16,6 @@ Future<void> initializeApp()async{
   await dotenv.load(fileName: ".env");
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

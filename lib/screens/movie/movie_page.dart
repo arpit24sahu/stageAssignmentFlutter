@@ -105,6 +105,7 @@ class MoviePage extends StatelessWidget {
                           ),
                         ),
                       ),
+                      // Favorite Icon
                       BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
                         builder: (context, state) {
                           bool isFavorite = false;

@@ -30,7 +30,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Fetch the first page of the movies on initialization
     _movieBloc.add(FetchMovies(1));
+
+    // adding a listener to searchTerm controller. This will help
+    // in dynamically changing the results based on searchTerm
     searchTermController.addListener(() {
       searchTermNotifier.value = searchTermController.text;
     });
@@ -50,6 +54,8 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Movies'),
         centerTitle: false,
         actions: [
+          // This BlocBuilder is for Building the "Only Favorites" Toggle.
+          // It is turned on only when the movies are loaded and User has chosen to view the favorite movies only
           BlocProvider(
             create: (context) => _movieBloc,
             child: BlocBuilder<MovieBloc, MovieState>(
@@ -64,6 +70,7 @@ class _HomePageState extends State<HomePage> {
                     Switch(
                       value: turnedOn,
                       onChanged: (bool value){
+                        // Toggle the view based on user choice.
                         _movieBloc.add(OnlyShowFavoriteMovies(value));
                       },
                     )
@@ -85,6 +92,7 @@ class _HomePageState extends State<HomePage> {
           )
         ),
       ),
+      // This is responsible for rendering the main body of the App
       body: BlocProvider(
         create: (context) => _movieBloc,
         child: BlocBuilder<MovieBloc, MovieState>(
@@ -92,6 +100,8 @@ class _HomePageState extends State<HomePage> {
             if (state is MovieLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is MovieLoaded) {
+              // To dynamically change the value of searchTerm, we use a ValueListenableBuilder
+              // based on the value of searchTerm, we filter our results
               return ValueListenableBuilder<String>(
                 valueListenable: searchTermNotifier,
                 builder: (context, searchTerm, _) {

@@ -1,5 +1,4 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-String getDotenv(String key){
-  return dotenv.get(key, fallback: "");
-}
+// gets value from .env File
+String getDotenv(String key) => dotenv.get(key, fallback: "");
