@@ -106,7 +106,6 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               );
-
               // return MovieList(movies: state.movies);
             } else if (state is MovieLoadError) {
               return Center(

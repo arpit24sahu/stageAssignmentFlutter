@@ -29,7 +29,6 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   }
 
   Future<void> _onFetchMoreMovies(FetchMoreMovies event, Emitter<MovieState> emit) async {
-    emit(MovieLoading());
     try {
       List<Movie> moreMovies = [];
       moreMovies = await MovieRepository.getMovies(page: event.page);
