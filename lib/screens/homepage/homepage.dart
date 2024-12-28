@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/movie_bloc/movie_bloc.dart';
 import '../../bloc/movie_bloc/movie_event.dart';
 import '../../bloc/movie_bloc/movie_state.dart';
+import '../../data/models/movie.dart';
 import '../movie_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,15 +17,27 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final MovieBloc _movieBloc = MovieBloc();
 
+  TextEditingController searchTermController = TextEditingController();
+  final ValueNotifier<String> searchTermNotifier = ValueNotifier<String>('');
+  bool onlyFavorites = false;
+
+  void onFavToggleChange(bool value){
+    _movieBloc.add(FetchMovies(value, 1));
+  }
+
   @override
   void initState() {
     super.initState();
-    _movieBloc.add(FetchMovies(1));
+    _movieBloc.add(FetchMovies(onlyFavorites, 1));
+    searchTermController.addListener(() {
+      searchTermNotifier.value = searchTermController.text;
+    });
   }
 
   @override
   void dispose() {
     _movieBloc.close();
+    searchTermController.dispose();
     super.dispose();
   }
 
@@ -33,18 +46,19 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Movies'),
+        centerTitle: false,
+        actions: [
+          FavoritesToggle(onChange: onFavToggleChange, initialValue: onlyFavorites,)
+        ],
         bottom: AppBar(
           automaticallyImplyLeading: false,
-          title: const Text("Favorites"),
-          centerTitle: false,
-          actions: [
-            Switch(
-              value: false,
-              onChanged: (bool value){
-
-              },
-            )
-          ],
+          title: TextField(
+            controller: searchTermController,
+            decoration: const InputDecoration(
+                hintText: "Search",
+              border: OutlineInputBorder()
+            ),
+          )
         ),
       ),
       body: BlocProvider(
@@ -54,7 +68,20 @@ class _HomePageState extends State<HomePage> {
             if (state is MovieLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is MovieLoaded) {
-              return MovieList(movies: state.movies);
+              return ValueListenableBuilder<String>(
+                valueListenable: searchTermNotifier,
+                builder: (context, searchTerm, _) {
+                  // Filter movies based on search term
+                  List<Movie> filteredMovies = state.movies.where((movie) {
+                    return (movie.title ?? "").toLowerCase().contains(searchTerm.toLowerCase());
+                  }).toList();
+
+                  // Return the updated MovieList
+                  return MovieList(movies: filteredMovies);
+                },
+              );
+
+              // return MovieList(movies: state.movies);
             } else if (state is MovieLoadError) {
               return Center(
                 child: Column(
@@ -68,9 +95,16 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        _movieBloc.add(FetchMovies(1));
+                        _movieBloc.add(FetchMovies(onlyFavorites, 1));
                       },
                       child: const Text('Retry?'),
+                    ),
+                    const SizedBox(height: 10),
+                    if(!onlyFavorites) ElevatedButton(
+                      onPressed: () {
+                        _movieBloc.add(FetchMovies(onlyFavorites, 1));
+                      },
+                      child: const Text('View Favorite Movies instead?'),
                     ),
                   ],
                 ),
@@ -80,6 +114,52 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ),
+    );
+  }
+}
+
+class FavoritesToggle extends StatefulWidget {
+  final bool initialValue;
+  final Function(bool) onChange;
+  const FavoritesToggle({super.key, required this.initialValue, required this.onChange});
+
+  @override
+  State<FavoritesToggle> createState() => _FavoritesToggleState();
+}
+
+class _FavoritesToggleState extends State<FavoritesToggle> {
+
+  bool isFav = false;
+
+  void initialize(){
+    setState(() {
+      isFav = widget.initialValue;
+    });
+  }
+
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initialize();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text("Only Favorites "),
+        Switch(
+          value: isFav,
+          onChanged: (bool value){
+            widget.onChange(value);
+            setState(() {
+              isFav = value;
+            });
+          },
+        )
+      ],
     );
   }
 }

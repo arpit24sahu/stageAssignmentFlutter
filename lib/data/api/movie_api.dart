@@ -22,6 +22,7 @@ class MovieApi {
     try {
       final response = await http.get(url);
 
+      print(response.statusCode);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
