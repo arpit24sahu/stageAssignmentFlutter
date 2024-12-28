@@ -19,12 +19,8 @@ class _HomePageState extends State<HomePage> {
 
   TextEditingController searchTermController = TextEditingController();
   final ValueNotifier<String> searchTermNotifier = ValueNotifier<String>('');
-  bool onlyFavorites = false;
-  int currentPage = 1;
 
-  void onFavToggleChange(bool value){
-    _movieBloc.add(FetchMovies(value, 1));
-  }
+  int currentPage = 1;
 
   void onLoadMoreMovies(){
     currentPage++;
@@ -34,7 +30,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _movieBloc.add(FetchMovies(onlyFavorites, 1));
+    _movieBloc.add(FetchMovies(1));
     searchTermController.addListener(() {
       searchTermNotifier.value = searchTermController.text;
     });
@@ -54,7 +50,29 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Movies'),
         centerTitle: false,
         actions: [
-          FavoritesToggle(onChange: onFavToggleChange, initialValue: onlyFavorites,)
+          BlocProvider(
+            create: (context) => _movieBloc,
+            child: BlocBuilder<MovieBloc, MovieState>(
+              builder: (context, state){
+                bool turnedOn = false;
+                if(state is MovieLoaded && state.onlyFavoriteMovies){
+                  turnedOn = true;
+                }
+                return Row(
+                  children: [
+                    const Text("Only Favorites "),
+                    Switch(
+                      value: turnedOn,
+                      onChanged: (bool value){
+                        _movieBloc.add(OnlyShowFavoriteMovies(value));
+                      },
+                    )
+                  ],
+                );
+              },
+            ),
+          )
+
         ],
         bottom: AppBar(
           automaticallyImplyLeading: false,
@@ -91,16 +109,16 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(
                           height: 16,
                         ),
-                        if(searchTerm.isEmpty && state.movies.isNotEmpty && (!onlyFavorites))
-                          ElevatedButton(
-                            onPressed: (){
-                              // Todo
-                              // Implement last page functionality and fix visibility of this button
-                              onLoadMoreMovies();
-                            },
-                            child: Text("Load More Movies"),
-                          )
 
+                        /// Give option to load more movies if "Only Favorites" is deselected, searchBox is Empty and there are already some movies present
+                        if((!state.onlyFavoriteMovies) && searchTermController.text.isEmpty && filteredMovies.isNotEmpty) ElevatedButton(
+                          onPressed: onLoadMoreMovies,
+                          child: const Text("Load More Movies"),
+                        ),
+                        if(filteredMovies.isEmpty) ...[
+                          if(searchTermController.text.isNotEmpty) const Center(child: Text("No Movies met your search Criteria"))
+                          else const Center(child: Text("No Movies Found"))
+                        ],
                       ],
                     ),
                   );
@@ -120,14 +138,14 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        _movieBloc.add(FetchMovies(onlyFavorites, 1));
+                        _movieBloc.add(FetchMovies(1));
                       },
                       child: const Text('Retry?'),
                     ),
                     const SizedBox(height: 10),
-                    if(!onlyFavorites) ElevatedButton(
+                    ElevatedButton(
                       onPressed: () {
-                        _movieBloc.add(FetchMovies(onlyFavorites, 1));
+                        _movieBloc.add(OnlyShowFavoriteMovies(true));
                       },
                       child: const Text('View Favorite Movies instead?'),
                     ),
@@ -143,48 +161,3 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class FavoritesToggle extends StatefulWidget {
-  final bool initialValue;
-  final Function(bool) onChange;
-  const FavoritesToggle({super.key, required this.initialValue, required this.onChange});
-
-  @override
-  State<FavoritesToggle> createState() => _FavoritesToggleState();
-}
-
-class _FavoritesToggleState extends State<FavoritesToggle> {
-
-  bool isFav = false;
-
-  void initialize(){
-    setState(() {
-      isFav = widget.initialValue;
-    });
-  }
-
-
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    initialize();
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Text("Only Favorites "),
-        Switch(
-          value: isFav,
-          onChanged: (bool value){
-            widget.onChange(value);
-            setState(() {
-              isFav = value;
-            });
-          },
-        )
-      ],
-    );
-  }
-}

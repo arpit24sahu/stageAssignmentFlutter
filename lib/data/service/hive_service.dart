@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:instabot/data/service/constants.dart';
-
 import '../models/movie.dart';
+
+enum HiveBoxNames{
+  favoriteMovies
+}
 
 
 class HiveService{

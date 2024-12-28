@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_bloc.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_event.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_state.dart';
+import '../../constants.dart';
 import '../../data/models/movie.dart';
 
 class MoviePage extends StatelessWidget {
@@ -39,7 +40,7 @@ class MoviePage extends StatelessWidget {
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: NetworkImage(
-                        "https://image.tmdb.org/t/p/w500/${movie.backdropPath}"
+                        '${TmdbApi.imageBaseUrl}/${movie.backdropPath}',
                     ),
                     fit: BoxFit.cover,
                   ),
@@ -63,7 +64,7 @@ class MoviePage extends StatelessWidget {
                           decoration: BoxDecoration(
                             image: DecorationImage(
                               image: NetworkImage(
-                                  "https://image.tmdb.org/t/p/w500/${movie.posterPath}"
+                                  '${TmdbApi.imageBaseUrl}/${movie.posterPath}',
                               ),
                               fit: BoxFit.cover,
                             ),
@@ -136,7 +137,7 @@ class MoviePage extends StatelessWidget {
                       style: const TextStyle(fontSize: 16),
                     ),
                   const SizedBox(height: 16),
-                  Divider(thickness: 2,),
+                  const Divider(thickness: 2,),
                   const SizedBox(height: 16),
                 ],
               ),

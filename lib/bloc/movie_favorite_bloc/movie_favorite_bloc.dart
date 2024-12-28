@@ -1,7 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:hive/hive.dart';
-import 'package:instabot/data/service/constants.dart';
-
+import '../../data/service/hive_service.dart';
 import 'movie_favorite_event.dart';
 import 'movie_favorite_state.dart';
 

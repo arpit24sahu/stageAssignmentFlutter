@@ -6,6 +6,7 @@ import 'package:instabot/screens/movie/movie_page.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_bloc.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_event.dart';
 import '../../bloc/movie_favorite_bloc/movie_favorite_state.dart';
+import '../../constants.dart';
 import '../../data/models/movie.dart';
 
 class MovieCard extends StatelessWidget {
@@ -53,7 +54,7 @@ class MovieCard extends StatelessWidget {
                       top: Radius.circular(10.0),
                     ),
                     child: Image.network(
-                      'https://image.tmdb.org/t/p/w500/${movie.posterPath}',
+                      '${TmdbApi.imageBaseUrl}/${movie.posterPath}',
                       // height: 400,
                       width: double.infinity,
                       fit: BoxFit.cover,

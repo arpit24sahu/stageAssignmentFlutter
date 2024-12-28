@@ -15,7 +15,6 @@ class MovieApi {
     return "$_baseUrl$endpoint?page=$page&api_key=$_apiKey";
   }
 
-  /// Fetch trending movies for a given page
   static Future<Map<String, dynamic>> getTrendingMovies(int page) async {
     final endpoint = _buildApiEndpoint(_trendingMoviesEndpoint, page);
     final url = Uri.parse(endpoint);
@@ -29,14 +28,13 @@ class MovieApi {
         },
       );
 
-      print(response.statusCode);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch movies. Status code: ${response.statusCode}');
+        throw Exception('Uh oh! The request failed with Status Code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error occurred while fetching trending movies: $e');
+      throw Exception('Uh oh! The server request failed. Can you recheck your Internet Connection?');
     }
   }
 }

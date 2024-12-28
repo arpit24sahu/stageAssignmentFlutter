@@ -7,24 +7,21 @@ import 'movie_event.dart';
 import 'movie_state.dart';
 
 class MovieBloc extends Bloc<MovieEvent, MovieState> {
-  List<Movie> movies = [];
+  List<Movie> loadedMovies = [];
 
   MovieBloc() : super(MovieInitial()) {
     on<FetchMovies>(_onFetchMovies);
     on<FetchMoreMovies>(_onFetchMoreMovies);
+    on<OnlyShowFavoriteMovies>(_onOnlyShowFavoriteMovies);
   }
 
   Future<void> _onFetchMovies(FetchMovies event, Emitter<MovieState> emit) async {
     emit(MovieLoading());
     try {
-      if(event.onlyFavorites){
-        movies = await HiveService.getFavoriteMovies();
-      } else {
-        movies = await MovieRepository.getMovies(page: event.page);
-      }
-      emit(MovieLoaded(movies));
+      loadedMovies = await MovieRepository.getMovies(page: event.page);
+      emit(MovieLoaded(loadedMovies, false));
     } catch (e) {
-      emit(MovieLoadError('Failed to load movies: ${e.toString()}'));
+      emit(MovieLoadError(e.toString()));
     }
   }
 
@@ -32,10 +29,24 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     try {
       List<Movie> moreMovies = [];
       moreMovies = await MovieRepository.getMovies(page: event.page);
-      movies.addAll(moreMovies);
-      emit(MovieLoaded(movies));
+      loadedMovies.addAll(moreMovies);
+      emit(MovieLoaded(loadedMovies, false));
     } catch (e) {
-      emit(MovieLoadError('Failed to load movies: ${e.toString()}'));
+      emit(MovieLoadError(e.toString()));
+    }
+  }
+
+  Future<void> _onOnlyShowFavoriteMovies(OnlyShowFavoriteMovies event, Emitter<MovieState> emit) async {
+    emit(MovieLoading());
+    try {
+      if(event.onlyFavorites){
+        List<Movie> movies = await HiveService.getFavoriteMovies();
+        emit(MovieLoaded(movies, true));
+      } else {
+        emit(MovieLoaded(loadedMovies, false));
+      }
+    } catch (e) {
+      emit(MovieLoadError(e.toString()));
     }
   }
 }

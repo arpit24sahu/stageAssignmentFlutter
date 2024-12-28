@@ -11,7 +11,7 @@ class  MovieRepository {
       final List<dynamic> results = response['results'] ?? [];
       return results.map((json) => Movie.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch movies: $e');
+      throw Exception('$e');
     }
   }
 }
