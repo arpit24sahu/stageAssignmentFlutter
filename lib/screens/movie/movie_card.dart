@@ -16,36 +16,33 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // Initialize the Bloc with the Movie ID and call Check Status to check the Favorite Status
-      create: (context) => MovieCardFavoriteBloc(movieId: movie.id??"")
-        ..add(CheckFavoriteStatus()),
-      child: BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
-        builder: (context, state) {
-          final bloc = BlocProvider.of<MovieCardFavoriteBloc>(context);
+    return BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
+      builder: (context, state) {
+        final bloc = BlocProvider.of<MovieCardFavoriteBloc>(context);
 
-          if (state is MovieCardFavoriteLoading) {
-            return const CircularProgressIndicator();
-          }
+        if (state is MovieCardFavoriteLoading) {
+          return const CircularProgressIndicator();
+        }
 
-          bool isFavorite = false;
-          if (state is MovieCardFavoriteStatus) {
-            isFavorite = state.isFavorite;
-          }
+        bool isFavorite = false;
+        if (state is MovieCardFavoriteStatus) {
+          isFavorite = state.isFavorite;
+        }
 
-          return InkWell(
-            onTap: () {
-              // When movie card is tapped, open the MoviePage which shows movie details
-              Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (newContext) => BlocProvider.value(
-                        value: BlocProvider.of<MovieCardFavoriteBloc>(context),
-                        child: MoviePage(movie: movie)
-                    ),
-                  )
-              );
-            },
-            child: Card(
+        return InkWell(
+          onTap: () {
+            // When movie card is tapped, open the MoviePage which shows movie details
+            Navigator.push(context,
+                MaterialPageRoute(
+                  builder: (newContext) => BlocProvider.value(
+                      value: BlocProvider.of<MovieCardFavoriteBloc>(context),
+                      child: MoviePage(movie: movie)
+                  ),
+                )
+            );
+          },
+          child: Card(
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -110,7 +107,6 @@ class MovieCard extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: IconButton(
@@ -129,9 +125,9 @@ class MovieCard extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

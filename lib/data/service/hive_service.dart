@@ -13,18 +13,6 @@ class HiveService{
     await Hive.openBox(HiveBoxNames.favoriteMovies.name);
   }
 
-  // get favorite movies from Hive
-  static Future<List<Movie>> getFavoriteMovies() async {
-    var box = await Hive.openBox(HiveBoxNames.favoriteMovies.name);
-    var movieIds = box.keys;
-    List<Movie> favoriteMovies = [];
+   Box favoriteBox() => Hive.box(HiveBoxNames.favoriteMovies.name);
 
-    for (var movieId in movieIds) {
-      var movieJson = box.get(movieId);
-      if (movieJson != null) {
-        favoriteMovies.add(Movie.fromJson(movieJson.cast<String, dynamic>()));
-      }
-    }
-    return favoriteMovies;
-  }
 }
