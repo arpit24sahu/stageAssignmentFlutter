@@ -57,7 +57,7 @@ void main() {
 
   group('end-to-end test', () {
     testWidgets('app launches', (tester) async {
-      await tester.pumpWidget(app.MyApp());
+      await tester.pumpWidget(const app.MyApp());
       await tester.pumpAndSettle();
       expect(find.byType(app.MyApp), findsOneWidget);
     });
@@ -72,7 +72,7 @@ void main() {
           hiveFavoriteService: mockHiveFavoriteService
       );
       Widget widget = MaterialApp(
-        home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage(movieBloc: mockMovieBloc,)),
+        home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage()),
       );
       when(()=> mockMovieRepository.getMovies()).thenAnswer((_) async=> mockMovies);
       when(()=> mockMovieRepository.getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMovies);
@@ -110,7 +110,7 @@ void main() {
           hiveFavoriteService: mockHiveFavoriteService
       );
       Widget widget = MaterialApp(
-        home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage(movieBloc: mockMovieBloc,)),
+        home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage()),
       );
 
       when(()=> mockMovieRepository.getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMoreMovies);
@@ -124,12 +124,6 @@ void main() {
       final movieCardFinder = find.byType(MovieCard);
       expect(movieCardFinder, findsNWidgets(6));
       final loadMoreButtonFinder = find.byType(ElevatedButton);
-      // Scroll until the button is visible
-      // await tester.scrollUntilVisible(
-      //   loadMoreButtonFinder,
-      //   500.0, // Amount to scroll each step,
-      //   scrollable: find.byKey(const ValueKey("MovieListColumn")), // Optional: Find the specific scrollable widget
-      // );
       final buttonOffset = tester.getCenter(loadMoreButtonFinder);
       await tester.tapAt(buttonOffset);
       await tester.pumpAndSettle();
@@ -162,7 +156,7 @@ void main() {
     testWidgets('homepage handles error correctly', (tester) async {
       final movieBloc = MovieBloc(movieRepository: MockMovieRepository(), connectivity: MockConnectivity(), hiveFavoriteService: MockHiveFavoriteService());
       when(()=> movieBloc.movieRepository.getMovies(page: 1)).thenThrow(Exception('Network error'));
-      await tester.pumpWidget(BlocProvider.value(value: movieBloc, child: HomePage(movieBloc: movieBloc)));
+      await tester.pumpWidget(BlocProvider.value(value: movieBloc, child: HomePage()));
       await tester.pumpAndSettle();
       expect(find.text('Network error'), findsOneWidget);
       expect(find.byType(ElevatedButton), findsNWidgets(2)); // Retry and View Favorites buttons
@@ -177,35 +171,35 @@ void main() {
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] when FetchMovies event is added',
       build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
-      act: (bloc) => bloc.add(FetchMovies(1)),
+      act: (bloc) => bloc.add(FetchMovies()),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] when FetchMoreMovies event is added',
       build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
-      act: (bloc) => bloc.add(FetchMoreMovies(2)),
+      act: (bloc) => bloc.add(FetchMoreMovies()),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] with favorite movies when OnlyShowFavoriteMovies event is added with onlyFavorites true',
       build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
-      act: (bloc) => bloc.add(OnlyShowFavoriteMovies(true)),
+      act: (bloc) => bloc.add(FavoriteMoviesToggle(true)),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] with all movies when OnlyShowFavoriteMovies event is added with onlyFavorites false',
       build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
-      act: (bloc) => bloc.add(OnlyShowFavoriteMovies (false)),
+      act: (bloc) => bloc.add(FavoriteMoviesToggle (false)),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoadError] when FetchMovies event fails',
       build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
-      act: (bloc) => bloc.add(FetchMovies(1)),
+      act: (bloc) => bloc.add(FetchMovies()),
       expect: () => [isA<MovieLoadError>()],
       setUp: () {
         when(() => mockMovieRepository.getMovies(page: 1)).thenThrow(Exception('Network error'));

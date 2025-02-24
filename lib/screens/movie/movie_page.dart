@@ -14,11 +14,9 @@ class MoviePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  final bloc = context.read<MovieCardFavoriteBloc>();
-
   return Scaffold(
       appBar: AppBar(
-        title: Text(""),
+        title: const Text(""),
         actions: [
           IconButton(
               icon: Icon(Icons.share),
@@ -106,17 +104,16 @@ class MoviePage extends StatelessWidget {
                         ),
                       ),
                       // Favorite Icon
-                      BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
+                      BlocBuilder<MovieFavoriteBloc, MovieFavoriteState>(
                         builder: (context, state) {
                           bool isFavorite = false;
-
-                          if (state is MovieCardFavoriteStatus) {
-                            isFavorite = state.isFavorite;
+                          if (state is MovieFavoritesLoaded) {
+                            isFavorite = state.favoriteMovies.map((movie) => movie.id).contains(movie.id);
                           }
 
                           return IconButton(
                             onPressed: () {
-                              bloc.add(ToggleFavoriteStatus(movie));
+                              context.read<MovieFavoriteBloc>().add(MovieFavoriteToggle(movie: movie));
                             },
                             icon: Icon(
                               isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -126,7 +123,6 @@ class MoviePage extends StatelessWidget {
                           );
                         },
                       ),
-
                     ],
                   ),
                   const SizedBox(height: 8),

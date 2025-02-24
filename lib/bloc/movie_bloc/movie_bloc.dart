@@ -12,18 +12,22 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   final HiveFavoriteService hiveFavoriteService;
 
   List<Movie> loadedMovies = [];
+  int currentPage = 1;
 
   MovieBloc({required this.movieRepository, required this.connectivity, required this.hiveFavoriteService}) : super(MovieInitial()) {
     on<FetchMovies>(_onFetchMovies);
     on<FetchMoreMovies>(_onFetchMoreMovies);
-    on<OnlyShowFavoriteMovies>(_onOnlyShowFavoriteMovies);
+    on<FavoriteMoviesToggle>(_onOnlyShowFavoriteMovies);
   }
 
   Future<bool> _connectivityAvailable() async {
     List<ConnectivityResult> connectivityResults = await connectivity.checkConnectivity();
     print(connectivityResults);
-    if(connectivityResults.contains(ConnectivityResult.wifi)
-        || connectivityResults.contains(ConnectivityResult.mobile)){
+    if(
+    connectivityResults.contains(ConnectivityResult.wifi)
+        ||
+        connectivityResults.contains(ConnectivityResult.mobile
+        )){
       return true;
     }
     return false;
@@ -31,29 +35,19 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
 
   Future<void> _onFetchMovies(FetchMovies event, Emitter<MovieState> emit) async {
     emit(MovieLoading());
+    currentPage = 1;
     try {
       if(!(await _connectivityAvailable())){
         emit(MovieLoadError("No internet connection. Please check your network and try again."));
         return;
       }
 
-      loadedMovies = await movieRepository.getMovies(page: event.page);
+      loadedMovies = await movieRepository.getMovies();
       emit(MovieLoaded(loadedMovies, false));
     } catch (e) {
       emit(MovieLoadError(e.toString()));
     }
   }
-
-  // // Old function without the Network Connectivity Check
-  // Future<void> _onFetchMovies2(FetchMovies event, Emitter<MovieState> emit) async {
-  //   emit(MovieLoading());
-  //   try {
-  //     loadedMovies = await MovieRepository.getMovies(page: event.page);
-  //     emit(MovieLoaded(loadedMovies, false));
-  //   } catch (e) {
-  //     emit(MovieLoadError(e.toString()));
-  //   }
-  // }
 
   Future<void> _onFetchMoreMovies(FetchMoreMovies event, Emitter<MovieState> emit) async {
     try {
@@ -62,8 +56,9 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
       }
 
       List<Movie> moreMovies = [];
-      moreMovies = await movieRepository.getMovies(page: event.page);
+      moreMovies = await movieRepository.getMovies(page: currentPage + 1);
       loadedMovies.addAll(moreMovies);
+      currentPage++;
 
       emit(MovieLoaded(loadedMovies, false));
     } catch (e) {
@@ -71,19 +66,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     }
   }
 
-  // // Old function without the Network Connectivity Check
-  // Future<void> _onFetchMoreMovies2(FetchMoreMovies event, Emitter<MovieState> emit) async {
-  //   try {
-  //     List<Movie> moreMovies = [];
-  //     moreMovies = await MovieRepository.getMovies(page: event.page);
-  //     loadedMovies.addAll(moreMovies);
-  //     emit(MovieLoaded(loadedMovies, false));
-  //   } catch (e) {
-  //     emit(MovieLoadError(e.toString()));
-  //   }
-  // }
-
-  Future<void> _onOnlyShowFavoriteMovies(OnlyShowFavoriteMovies event, Emitter<MovieState> emit) async {
+  Future<void> _onOnlyShowFavoriteMovies(FavoriteMoviesToggle event, Emitter<MovieState> emit) async {
     emit(MovieLoading());
     try {
       if(event.onlyFavorites){

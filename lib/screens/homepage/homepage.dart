@@ -1,55 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:instabot/data/service/hive_favorite_service.dart';
-import 'package:instabot/data/service/hive_service.dart';
 import '../../bloc/movie_bloc/movie_bloc.dart';
 import '../../bloc/movie_bloc/movie_event.dart';
 import '../../bloc/movie_bloc/movie_state.dart';
-import '../../constants.dart';
 import '../../data/models/movie.dart';
 import '../movie/movie_list.dart';
 
-class HomePage extends StatefulWidget {
-  final MovieBloc movieBloc;
-  const HomePage({super.key, required this.movieBloc});
+class HomePage extends StatelessWidget {
+  HomePage({super.key});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
+  final TextEditingController searchTermController = TextEditingController();
 
-class _HomePageState extends State<HomePage> {
-
-
-  TextEditingController searchTermController = TextEditingController();
   final ValueNotifier<String> searchTermNotifier = ValueNotifier<String>('');
 
-  int currentPage = 1;
-
-  void onLoadMoreMovies(){
-    currentPage++;
-    widget.movieBloc.add(FetchMoreMovies(currentPage));
-  }
-
-  @override
-  void initState(){
-    super.initState();
-
-    // Fetch the first page of the movies on initialization
-    widget.movieBloc.add(FetchMovies(1));
-
-    // adding a listener to searchTerm controller. This will help
-    // in dynamically changing the results based on searchTerm
-    searchTermController.addListener(() {
-      searchTermNotifier.value = searchTermController.text;
-    });
-  }
-
-  @override
-  void dispose() {
-    widget.movieBloc.close();
-    searchTermController.dispose();
-    super.dispose();
+  bool showMoreMoviesButton(bool onlyFavMovies, String searchTerm, List<Movie> filteredMovies){
+    return (!onlyFavMovies) && searchTerm.isEmpty && filteredMovies.isNotEmpty;
   }
 
   @override
@@ -73,20 +38,21 @@ class _HomePageState extends State<HomePage> {
                   Switch(
                     value: turnedOn,
                     onChanged: (bool value){
-                      // Toggle the view based on user choice.
-                      widget.movieBloc.add(OnlyShowFavoriteMovies(value));
+                      context.read<MovieBloc>().add(FavoriteMoviesToggle(value));
                     },
                   )
                 ],
               );
             },
           )
-
         ],
         bottom: AppBar(
           automaticallyImplyLeading: false,
           title: TextField(
             controller: searchTermController,
+            onChanged: (String value){
+              searchTermNotifier.value = searchTermController.text;
+            },
             decoration: const InputDecoration(
                 hintText: "Search",
               border: OutlineInputBorder()
@@ -122,8 +88,10 @@ class _HomePageState extends State<HomePage> {
                       ),
 
                       /// Give option to load more movies if "Only Favorites" is deselected, searchBox is Empty and there are already some movies present
-                      if((!state.onlyFavoriteMovies) && searchTermController.text.isEmpty && filteredMovies.isNotEmpty) ElevatedButton(
-                        onPressed: onLoadMoreMovies,
+                      if(showMoreMoviesButton(state.onlyFavoriteMovies, searchTermController.text, filteredMovies)) ElevatedButton(
+                        onPressed: (){
+                          context.read<MovieBloc>().add(FetchMoreMovies());
+                        },
                         child: const Text("Load More Movies"),
                       ),
                       if(filteredMovies.isEmpty) ...[
@@ -149,14 +117,14 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      widget.movieBloc.add(FetchMovies(1));
+                      context.read<MovieBloc>().add(FetchMovies());
                     },
                     child: const Text('Retry?'),
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      widget.movieBloc.add(OnlyShowFavoriteMovies(true));
+                      context.read<MovieBloc>().add(FavoriteMoviesToggle(true));
                     },
                     child: const Text('View Favorite Movies instead?'),
                   ),
