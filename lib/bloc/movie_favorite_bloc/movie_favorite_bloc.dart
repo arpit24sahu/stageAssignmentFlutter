@@ -1,45 +1,88 @@
 import 'package:bloc/bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:instabot/data/service/hive_favorite_service.dart';
+import '../../data/models/movie.dart';
 import '../../data/service/hive_service.dart';
 import 'movie_favorite_event.dart';
 import 'movie_favorite_state.dart';
 
-class MovieCardFavoriteBloc
-    extends Bloc<MovieCardFavoriteEvent, MovieCardFavoriteState> {
-  final Box favoriteBox = Hive.box(HiveBoxNames.favoriteMovies.name);
-  final String movieId;
 
-  MovieCardFavoriteBloc({required this.movieId}) : super(MovieCardFavoriteInitial()) {
-    on<CheckFavoriteStatus>(_onCheckFavoriteStatus);
-    on<ToggleFavoriteStatus>(_onToggleFavoriteStatus);
+class MovieFavoriteBloc extends Bloc<MovieFavoriteEvent, MovieFavoriteState> {
+  // final Box favoriteBox;
+  List<Movie> favoriteMovies = [];
+  String? currentMovieId;
+  HiveFavoriteService hiveFavoriteService;
+
+  MovieFavoriteBloc({required this.hiveFavoriteService}) : super(MovieFavoritesLoading()) {
+    on<LoadFavoriteMovies>(_onLoadFavoriteMovies);
+    on<MovieFavoriteToggle>(_onMovieFavoriteToggle);
   }
 
-  Future<void> _onCheckFavoriteStatus(
-      CheckFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
+  Future<void> _onLoadFavoriteMovies(LoadFavoriteMovies event, Emitter<MovieFavoriteState> emit)async{
+    emit(MovieFavoritesLoading());
     try {
-      emit(MovieCardFavoriteLoading());
-      final isFavorite = favoriteBox.containsKey(movieId);
-      emit(MovieCardFavoriteStatus(isFavorite));
-    } catch (e) {
-      emit(MovieCardFavoriteError("Failed to check favorite status"));
+      List<Movie> movies = await hiveFavoriteService.getFavoriteMovies();
+      emit(MovieFavoritesLoaded(favoriteMovies: movies, ));
+    } catch(e){
+      emit(MovieFavoritesError(errorMessage: e.toString()));
     }
   }
-
-  Future<void> _onToggleFavoriteStatus(
-      ToggleFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
+  Future<void> _onMovieFavoriteToggle(MovieFavoriteToggle event, Emitter<MovieFavoriteState> emit)async{
     try {
-      emit(MovieCardFavoriteLoading());
-      final isFavorite = favoriteBox.containsKey(movieId);
+      final isFavorite = hiveFavoriteService.favoriteBox.containsKey(event.movie.id);
 
       if (isFavorite) {
-        favoriteBox.delete(movieId);
-        emit(MovieCardFavoriteStatus(false));
+        hiveFavoriteService.favoriteBox.delete(event.movie.id);
+        favoriteMovies.removeWhere((movie) => movie.id == event.movie.id);
       } else {
-        favoriteBox.put(movieId, event.movie.toJson());
-        emit(MovieCardFavoriteStatus(true));
+        hiveFavoriteService.favoriteBox.put(event.movie.id, event.movie.toJson());
+        favoriteMovies.add(event.movie);
       }
-    } catch (e) {
-      emit(MovieCardFavoriteError("Failed to toggle favorite status"));
+      emit(MovieFavoritesLoaded(favoriteMovies: favoriteMovies, movie: event.movie));
+    } catch(e){
+      emit(MovieFavoritesError(errorMessage: e.toString()));
     }
   }
 }
+
+
+//
+// class MovieCardFavoriteBloc
+//     extends Bloc<MovieCardFavoriteEvent, MovieCardFavoriteState> {
+//   final Box favoriteBox = Hive.box(HiveBoxNames.favoriteMovies.name);
+//   final String movieId;
+//
+//   MovieCardFavoriteBloc({required this.movieId}) : super(MovieCardFavoriteInitial()) {
+//     on<CheckFavoriteStatus>(_onCheckFavoriteStatus);
+//     on<ToggleFavoriteStatus>(_onToggleFavoriteStatus);
+//   }
+//
+//   Future<void> _onCheckFavoriteStatus(
+//       CheckFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
+//     try {
+//       emit(MovieCardFavoriteLoading());
+//       final isFavorite = favoriteBox.containsKey(movieId);
+//       emit(MovieCardFavoriteStatus(isFavorite));
+//     } catch (e) {
+//       emit(MovieCardFavoriteError("Failed to check favorite status"));
+//     }
+//   }
+//
+//   Future<void> _onToggleFavoriteStatus(
+//       ToggleFavoriteStatus event, Emitter<MovieCardFavoriteState> emit) async {
+//     try {
+//       emit(MovieCardFavoriteLoading());
+//       final isFavorite = favoriteBox.containsKey(movieId);
+//
+//       if (isFavorite) {
+//         favoriteBox.delete(movieId);
+//         emit(MovieCardFavoriteStatus(false));
+//       } else {
+//         favoriteBox.put(movieId, event.movie.toJson());
+//         emit(MovieCardFavoriteStatus(true));
+//       }
+//     } catch (e) {
+//       emit(MovieCardFavoriteError("Failed to toggle favorite status"));
+//     }
+//   }
+// }

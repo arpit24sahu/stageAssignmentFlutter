@@ -16,121 +16,125 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // Initialize the Bloc with the Movie ID and call Check Status to check the Favorite Status
-      create: (context) => MovieCardFavoriteBloc(movieId: movie.id??"")
-        ..add(CheckFavoriteStatus()),
-      child: BlocBuilder<MovieCardFavoriteBloc, MovieCardFavoriteState>(
-        builder: (context, state) {
-          final bloc = BlocProvider.of<MovieCardFavoriteBloc>(context);
+    print("Rebuilding Movie Card: ${movie.title}");
+    return InkWell(
+      onTap: () {
+        // When movie card is tapped, open the MoviePage which shows movie details
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (newContext) => BlocProvider.value(
+                  value: context.read<MovieFavoriteBloc>(),
+                  child: MoviePage(movie: movie)
+              ),
+            )
+        );
+      },
+      child: Card(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Poster Image
+              movie.posterPath != null
+                  ? ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(10.0),
+                ),
+                child: Image.network(
+                  '${TmdbApi.imageBaseUrl}/${movie.posterPath}',
+                  // height: 400,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+                  : Container(
+                height: 600,
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
 
-          if (state is MovieCardFavoriteLoading) {
-            return const CircularProgressIndicator();
-          }
-
-          bool isFavorite = false;
-          if (state is MovieCardFavoriteStatus) {
-            isFavorite = state.isFavorite;
-          }
-
-          return InkWell(
-            onTap: () {
-              // When movie card is tapped, open the MoviePage which shows movie details
-              Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (newContext) => BlocProvider.value(
-                        value: BlocProvider.of<MovieCardFavoriteBloc>(context),
-                        child: MoviePage(movie: movie)
-                    ),
-                  )
-              );
-            },
-            child: Card(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              Row(
                 children: [
-                  // Poster Image
-                  movie.posterPath != null
-                      ? ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10.0),
-                    ),
-                    child: Image.network(
-                      '${TmdbApi.imageBaseUrl}/${movie.posterPath}',
-                      // height: 400,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 200,
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 50,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                      : Container(
-                    height: 600,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 50,
-                        color: Colors.grey,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text(
+                        movie.title??"",
+                        style: const TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: BlocBuilder<MovieFavoriteBloc, MovieFavoriteState>(
+                        buildWhen: (previous, current){
+                          if(current is MovieFavoritesLoaded){
+                            if(current.movie==null) {
+                              return true;
+                            } else if(current.movie!.id == movie.id){
+                              return true;
+                            } else {
+                              return false;
+                            }
+                          }
+                          return true;
+                        },
+                        builder: (context, state) {
+                          // print("Build movie card fav button: ${movie.title}");
+                          bool isFavorite = false;
+                          if (state is MovieFavoritesLoaded) {
+                            isFavorite = state.favoriteMovies.map((movie) => movie.id).contains(movie.id);
+                          }
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Text(
-                            movie.title??"",
-                            style: const TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              overflow: TextOverflow.ellipsis,
+                          return IconButton(
+                            icon: Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : null,
                             ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: IconButton(
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : null,
-                          ),
-                          onPressed: () {
-                            // Toggle Fav movie when icon is clicked
-                            bloc.add(ToggleFavoriteStatus(movie));
-                          },
-                        ),
-                      ),
-                    ],
+                            onPressed: () {
+                              // Toggle Fav movie when icon is clicked
+                              context.read<MovieFavoriteBloc>().add(MovieFavoriteToggle(movie: movie));
+                            },
+                          );
+                        }
+                    ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
     );
   }

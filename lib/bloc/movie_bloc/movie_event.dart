@@ -1,18 +1,12 @@
 abstract class MovieEvent{}
 
-class FetchMovies extends MovieEvent{
-  int page;
-  FetchMovies(this.page);
-}
+class FetchMovies extends MovieEvent{}
 
-class FetchMoreMovies extends MovieEvent{
-  int page;
-  FetchMoreMovies(this.page);
-}
+class FetchMoreMovies extends MovieEvent{}
 
-class OnlyShowFavoriteMovies extends MovieEvent{
+class FavoriteMoviesToggle extends MovieEvent{
   bool onlyFavorites;
-  OnlyShowFavoriteMovies(this.onlyFavorites);
+  FavoriteMoviesToggle(this.onlyFavorites);
 }
 
 

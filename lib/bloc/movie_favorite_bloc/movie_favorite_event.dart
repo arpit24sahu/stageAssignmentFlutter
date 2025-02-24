@@ -1,11 +1,22 @@
 import '../../data/models/movie.dart';
 
-abstract class MovieCardFavoriteEvent {}
+abstract class MovieFavoriteEvent{}
 
-class CheckFavoriteStatus extends MovieCardFavoriteEvent {}
+class LoadFavoriteMovies extends MovieFavoriteEvent{}
 
-class ToggleFavoriteStatus extends MovieCardFavoriteEvent {
-  final Movie movie;
-
-  ToggleFavoriteStatus(this.movie);
+class MovieFavoriteToggle extends MovieFavoriteEvent{
+  Movie movie;
+  MovieFavoriteToggle({required this.movie});
 }
+
+
+//
+// abstract class MovieCardFavoriteEvent {}
+//
+// class CheckFavoriteStatus extends MovieCardFavoriteEvent {}
+//
+// class ToggleFavoriteStatus extends MovieCardFavoriteEvent {
+//   final Movie movie;
+//
+//   ToggleFavoriteStatus(this.movie);
+// }
