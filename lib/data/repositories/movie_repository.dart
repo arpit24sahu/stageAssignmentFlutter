@@ -1,10 +1,12 @@
-import 'package:hive/hive.dart';
-
 import '../api/movie_api.dart';
 import '../models/movie.dart';
 
-class  MovieRepository {
-  // Make the API call to get Movies
+abstract class MovieRepository {
+  Future<List<Movie>> getMovies({int page = 1});
+}
+
+class MovieRepositoryImpl implements MovieRepository {
+  @override
   Future<List<Movie>> getMovies({int page = 1}) async {
     try {
       final response = await MovieApi.getTrendingMovies(page);

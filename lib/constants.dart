@@ -1,13 +1,11 @@
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:instabot/data/service/hive_service.dart';
-
 import 'data/repositories/movie_repository.dart';
-import 'data/service/hive_favorite_service.dart';
 
-final MovieRepository movieRepository = MovieRepository();
-final Connectivity connectivity = Connectivity();
-final HiveService hiveService = HiveService();
+// final MovieRepository movieRepository = MovieRepository();
+// final Connectivity connectivity = Connectivity();
+// final HiveService hiveService = HiveService();
 
 
 class DotEnvKeys{

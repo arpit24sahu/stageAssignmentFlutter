@@ -1,8 +1,7 @@
 import 'package:bloc/bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:instabot/data/service/hive_favorite_service.dart';
 import '../../data/models/movie.dart';
 import '../../data/service/hive_service.dart';
+import '../../locator.dart';
 import 'movie_favorite_event.dart';
 import 'movie_favorite_state.dart';
 
@@ -11,9 +10,8 @@ class MovieFavoriteBloc extends Bloc<MovieFavoriteEvent, MovieFavoriteState> {
   // final Box favoriteBox;
   List<Movie> favoriteMovies = [];
   String? currentMovieId;
-  HiveFavoriteService hiveFavoriteService;
 
-  MovieFavoriteBloc({required this.hiveFavoriteService}) : super(MovieFavoritesLoading()) {
+  MovieFavoriteBloc() : super(MovieFavoritesLoading()) {
     on<LoadFavoriteMovies>(_onLoadFavoriteMovies);
     on<MovieFavoriteToggle>(_onMovieFavoriteToggle);
   }
@@ -21,7 +19,7 @@ class MovieFavoriteBloc extends Bloc<MovieFavoriteEvent, MovieFavoriteState> {
   Future<void> _onLoadFavoriteMovies(LoadFavoriteMovies event, Emitter<MovieFavoriteState> emit)async{
     emit(MovieFavoritesLoading());
     try {
-      List<Movie> movies = await hiveFavoriteService.getFavoriteMovies();
+      List<Movie> movies = await locator<HiveService>().getFavoriteMovies();
       emit(MovieFavoritesLoaded(favoriteMovies: movies, ));
     } catch(e){
       emit(MovieFavoritesError(errorMessage: e.toString()));
@@ -29,13 +27,13 @@ class MovieFavoriteBloc extends Bloc<MovieFavoriteEvent, MovieFavoriteState> {
   }
   Future<void> _onMovieFavoriteToggle(MovieFavoriteToggle event, Emitter<MovieFavoriteState> emit)async{
     try {
-      final isFavorite = hiveFavoriteService.favoriteBox.containsKey(event.movie.id);
+      final isFavorite = locator<HiveService>().favoriteBox.containsKey(event.movie.id);
 
       if (isFavorite) {
-        hiveFavoriteService.favoriteBox.delete(event.movie.id);
+        locator<HiveService>().favoriteBox.delete(event.movie.id);
         favoriteMovies.removeWhere((movie) => movie.id == event.movie.id);
       } else {
-        hiveFavoriteService.favoriteBox.put(event.movie.id, event.movie.toJson());
+        locator<HiveService>().favoriteBox.put(event.movie.id, event.movie.toJson());
         favoriteMovies.add(event.movie);
       }
       emit(MovieFavoritesLoaded(favoriteMovies: favoriteMovies, movie: event.movie));

@@ -1,28 +1,26 @@
 import 'package:bloc/bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:instabot/locator.dart';
 import '../../data/models/movie.dart';
 import '../../data/repositories/movie_repository.dart';
-import '../../data/service/hive_favorite_service.dart';
+import '../../data/service/hive_service.dart';
 import 'movie_event.dart';
 import 'movie_state.dart';
 
 class MovieBloc extends Bloc<MovieEvent, MovieState> {
-  final MovieRepository movieRepository;
-  final Connectivity connectivity;
-  final HiveFavoriteService hiveFavoriteService;
 
   List<Movie> loadedMovies = [];
   int currentPage = 1;
 
-  MovieBloc({required this.movieRepository, required this.connectivity, required this.hiveFavoriteService}) : super(MovieInitial()) {
+  MovieBloc() : super(MovieInitial()) {
     on<FetchMovies>(_onFetchMovies);
     on<FetchMoreMovies>(_onFetchMoreMovies);
     on<FavoriteMoviesToggle>(_onOnlyShowFavoriteMovies);
   }
 
   Future<bool> _connectivityAvailable() async {
-    List<ConnectivityResult> connectivityResults = await connectivity.checkConnectivity();
-    print(connectivityResults);
+    List<ConnectivityResult> connectivityResults = await locator<Connectivity>().checkConnectivity();
+    // print(connectivityResults);
     if(
     connectivityResults.contains(ConnectivityResult.wifi)
         ||
@@ -42,7 +40,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
         return;
       }
 
-      loadedMovies = await movieRepository.getMovies();
+      loadedMovies = await locator<MovieRepository>().getMovies();
       emit(MovieLoaded(loadedMovies, false));
     } catch (e) {
       emit(MovieLoadError(e.toString()));
@@ -56,7 +54,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
       }
 
       List<Movie> moreMovies = [];
-      moreMovies = await movieRepository.getMovies(page: currentPage + 1);
+      moreMovies = await locator<MovieRepository>().getMovies(page: currentPage + 1);
       loadedMovies.addAll(moreMovies);
       currentPage++;
 
@@ -70,7 +68,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     emit(MovieLoading());
     try {
       if(event.onlyFavorites){
-        List<Movie> movies = await hiveFavoriteService.getFavoriteMovies();
+        List<Movie> movies = await locator<HiveService>().getFavoriteMovies();
         emit(MovieLoaded(movies, true));
       } else {
         emit(MovieLoaded(loadedMovies, false));

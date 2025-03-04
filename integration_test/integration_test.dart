@@ -3,30 +3,39 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
+import 'package:get/get.dart';
 import 'package:instabot/bloc/movie_bloc/movie_event.dart';
 import 'package:instabot/bloc/movie_bloc/movie_state.dart';
-import 'package:instabot/data/service/hive_favorite_service.dart';
 import 'package:instabot/data/service/hive_service.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:instabot/bloc/movie_bloc/movie_bloc.dart';
 import 'package:instabot/data/models/movie.dart';
 import 'package:instabot/data/repositories/movie_repository.dart';
 import 'package:instabot/main.dart' as app;
-import 'package:instabot/screens/homepage/homepage.dart' as homepage;
 import 'package:instabot/screens/homepage/homepage.dart';
 import 'package:instabot/screens/movie/movie_card.dart';
 import 'package:instabot/screens/movie/movie_list.dart';
 import 'package:instabot/screens/movie/movie_page.dart';
 import 'package:mocktail/mocktail.dart';
-import 'integration_test.dart';
 
 // Mock classes
-class MockMovieRepository extends Mock implements MovieRepository {}
+// class MockMovieRepository extends Mock implements MovieRepository {}
+// class MockConnectivity extends Mock implements Connectivity {}
+// class MockHiveService extends Mock implements HiveService {}
+// class MockBox extends Mock implements Box {}
+
+class MockMovieRepository extends Mock implements MovieRepository {
+  @override
+  Future<List<Movie>> getMovies({int page = 1}) async {
+    return [Movie(id: "1", title: 'Test Movie')];
+  }
+}
+
 class MockConnectivity extends Mock implements Connectivity {}
-class MockHiveFavoriteService extends Mock implements HiveFavoriteService {}
+
 class MockHiveService extends Mock implements HiveService {}
-class MockBox extends Mock implements Box {}
 
 List<Movie> mockMovies = [
   Movie(id: "1", title: "Apple", ),
@@ -49,8 +58,17 @@ List<Movie> mockMoreMovies = [
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final GetIt getIt = GetIt.instance;
+
+  void setupTestLocator() {
+    getIt.reset();
+    getIt.registerLazySingleton<MovieRepository>(() => MockMovieRepository());
+    getIt.registerLazySingleton<Connectivity>(() => MockConnectivity());
+    getIt.registerLazySingleton<HiveService>(() => MockHiveService());
+  }
 
   setUpAll(()async{
+    setupTestLocator();
     await HiveService.initializeHive();
     await Hive.openBox(HiveBoxNames.favoriteMovies.name);
   });
@@ -63,21 +81,14 @@ void main() {
     });
 
     testWidgets('homepage displays correctly', (tester) async {
-      MockMovieRepository mockMovieRepository  = MockMovieRepository();
-      MockConnectivity mockConnectivity  = MockConnectivity();
-      MockHiveFavoriteService mockHiveFavoriteService  = MockHiveFavoriteService();
-      final mockMovieBloc = MovieBloc(
-          movieRepository: mockMovieRepository,
-          connectivity: mockConnectivity,
-          hiveFavoriteService: mockHiveFavoriteService
-      );
-      Widget widget = MaterialApp(
+      final MovieBloc mockMovieBloc = MovieBloc();
+      Widget widget = GetMaterialApp(
         home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage()),
       );
-      when(()=> mockMovieRepository.getMovies()).thenAnswer((_) async=> mockMovies);
-      when(()=> mockMovieRepository.getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMovies);
-      when(()=> mockConnectivity.checkConnectivity()).thenAnswer((_) async=> [ConnectivityResult.mobile]);
-      when(()=> mockHiveFavoriteService.getFavoriteMovies()).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<MovieRepository>().getMovies()).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<MovieRepository>().getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<Connectivity>().checkConnectivity()).thenAnswer((_) async=> [ConnectivityResult.mobile]);
+      when(()=> getIt<HiveService>().getFavoriteMovies()).thenAnswer((_) async=> mockMovies);
 
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
@@ -101,23 +112,16 @@ void main() {
     });
 
     testWidgets('homepage load more movies', (tester) async {
-      MockMovieRepository mockMovieRepository  = MockMovieRepository();
-      MockConnectivity mockConnectivity  = MockConnectivity();
-      MockHiveFavoriteService mockHiveFavoriteService  = MockHiveFavoriteService();
-      final mockMovieBloc = MovieBloc(
-          movieRepository: mockMovieRepository,
-          connectivity: mockConnectivity,
-          hiveFavoriteService: mockHiveFavoriteService
-      );
-      Widget widget = MaterialApp(
+      final MovieBloc mockMovieBloc = MovieBloc();
+      Widget widget = GetMaterialApp(
         home: BlocProvider(create: (context) => mockMovieBloc, child: HomePage()),
       );
 
-      when(()=> mockMovieRepository.getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMoreMovies);
-      when(()=> mockMovieRepository.getMovies()).thenAnswer((_) async=> mockMovies);
-      when(()=> mockMovieRepository.getMovies(page: 1)).thenAnswer((_) async=> mockMovies);
-      when(()=> mockConnectivity.checkConnectivity()).thenAnswer((_) async=> [ConnectivityResult.mobile]);
-      when(()=> mockHiveFavoriteService.getFavoriteMovies()).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<MovieRepository>().getMovies(page: any(named: 'page'))).thenAnswer((_) async=> mockMoreMovies);
+      when(()=> getIt<MovieRepository>().getMovies()).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<MovieRepository>().getMovies(page: 1)).thenAnswer((_) async=> mockMovies);
+      when(()=> getIt<Connectivity>().checkConnectivity()).thenAnswer((_) async=> [ConnectivityResult.mobile]);
+      when(()=> getIt<HiveService>().getFavoriteMovies()).thenAnswer((_) async=> mockMovies);
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
 
@@ -154,8 +158,8 @@ void main() {
     });
 
     testWidgets('homepage handles error correctly', (tester) async {
-      final movieBloc = MovieBloc(movieRepository: MockMovieRepository(), connectivity: MockConnectivity(), hiveFavoriteService: MockHiveFavoriteService());
-      when(()=> movieBloc.movieRepository.getMovies(page: 1)).thenThrow(Exception('Network error'));
+      final MovieBloc movieBloc = MovieBloc();
+      when(()=> getIt<MovieRepository>().getMovies(page: 1)).thenThrow(Exception('Network error'));
       await tester.pumpWidget(BlocProvider.value(value: movieBloc, child: HomePage()));
       await tester.pumpAndSettle();
       expect(find.text('Network error'), findsOneWidget);
@@ -164,45 +168,41 @@ void main() {
   });
 
   group('MovieBloc', () {
-    final mockMovieRepository = MockMovieRepository();
-    final mockConnectivity = MockConnectivity();
-    final mockHiveService = MockHiveFavoriteService();
-
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] when FetchMovies event is added',
-      build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
+      build: () => MovieBloc(),
       act: (bloc) => bloc.add(FetchMovies()),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] when FetchMoreMovies event is added',
-      build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
+      build: () => MovieBloc(),
       act: (bloc) => bloc.add(FetchMoreMovies()),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] with favorite movies when OnlyShowFavoriteMovies event is added with onlyFavorites true',
-      build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
+      build: () => MovieBloc(),
       act: (bloc) => bloc.add(FavoriteMoviesToggle(true)),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoaded] with all movies when OnlyShowFavoriteMovies event is added with onlyFavorites false',
-      build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
+      build: () => MovieBloc(),
       act: (bloc) => bloc.add(FavoriteMoviesToggle (false)),
       expect: () => [isA<MovieLoaded>()],
     );
 
     blocTest<MovieBloc, MovieState>(
       'emits [MovieLoadError] when FetchMovies event fails',
-      build: () => MovieBloc(movieRepository: mockMovieRepository, connectivity: mockConnectivity, hiveFavoriteService: mockHiveService),
+      build: () => MovieBloc(),
       act: (bloc) => bloc.add(FetchMovies()),
       expect: () => [isA<MovieLoadError>()],
       setUp: () {
-        when(() => mockMovieRepository.getMovies(page: 1)).thenThrow(Exception('Network error'));
+        when(() => getIt<MovieRepository>().getMovies(page: 1)).thenThrow(Exception('Network error'));
       },
     );
   });

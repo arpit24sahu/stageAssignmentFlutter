@@ -1,0 +1,2 @@
+/Users/arpitsahu/StudioProjects/instabot/android/app/.cxx/Debug/3q4i716q/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/arpitsahu/StudioProjects/instabot/android/app/.cxx/Debug/3q4i716q/armeabi-v7a/CMakeFiles/rebuild_cache.dir

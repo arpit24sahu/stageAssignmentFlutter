@@ -24,8 +24,6 @@ class HomePage extends StatelessWidget {
         title: const Text('Movies'),
         centerTitle: false,
         actions: [
-          // This BlocBuilder is for Building the "Only Favorites" Toggle.
-          // It is turned on only when the movies are loaded and User has chosen to view the favorite movies only
           BlocBuilder<MovieBloc, MovieState>(
             builder: (context, state){
               bool turnedOn = false;

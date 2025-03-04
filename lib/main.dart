@@ -5,12 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:instabot/data/service/hive_service.dart';
 import 'package:instabot/screens/homepage/homepage.dart';
-
 import 'bloc/movie_bloc/movie_bloc.dart';
 import 'bloc/movie_bloc/movie_event.dart';
-import 'constants.dart';
-import 'data/repositories/movie_repository.dart';
-import 'data/service/hive_favorite_service.dart';
 import 'locator.dart';
 
 void main() async {
@@ -41,13 +37,7 @@ class MyApp extends StatelessWidget {
         //         favoriteBox: hiveService.favoriteBox()
         //     )
         // )..add(FetchMovies()),
-        create: (context) => MovieBloc(
-            connectivity: locator<Connectivity>(),
-            movieRepository: locator<MovieRepository>(),
-            hiveFavoriteService: HiveFavoriteService(
-                favoriteBox: locator<HiveService>().favoriteBox()
-            )
-        )..add(FetchMovies()),
+        create: (context) => MovieBloc()..add(FetchMovies()),
         child: HomePage(),
       ),
     );

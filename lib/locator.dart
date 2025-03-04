@@ -7,7 +7,7 @@ final GetIt locator = GetIt.instance;
 
 void setupLocator() {
   // Register instances
-  locator.registerLazySingleton<MovieRepository>(() => MovieRepository());
+  locator.registerLazySingleton<MovieRepository>(() => MovieRepositoryImpl());
   locator.registerLazySingleton<Connectivity>(() => Connectivity());
   locator.registerLazySingleton<HiveService>(() => HiveService());
 }
